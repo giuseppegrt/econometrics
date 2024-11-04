@@ -1,3 +1,31 @@
+# ------------------------------------------------------------------------------
+#     Giuseppe Gruttad'Auria
+#     Institut du management
+#     Université de Neuchâtel
+# ------------------------------------------------------------------------------
+
+ddpath <- "C:/Users/giuse/Desktop/Econometrics/Material/Données-20230621/"
+
+setwd(ddpath)
+
+# ==============================================================================
+#
+#                             SEMAINE DE LECTURE
+#
+#                        Sélection et test de modèles
+#
+# ------------------------------------------------------------------------------
+
+# ------------------------------------------------------------------------------
+# Communities and Crime (US data 1990 and 1995)
+# ------------------------------------------------------------------------------
+
+# Données de base
+# ---------------
+
+# Vecteur de variables
+# Cette partie crée le vecteur vnames contenant les noms de toutes les variables
+
 vnames <- c(
    "communityname",
    "state", 
@@ -147,3 +175,51 @@ vnames <- c(
    "ViolentCrimesPerPop",
    "nonViolPerPop"
 )
+
+# Lecture des données 
+
+wdf <- read.csv2(file(paste(ddpath, "CommViolPredUnnormalizedData.txt", sep=""), 
+                      encoding="utf8"), 
+                 header=F, col.names=vnames, sep=",", dec=".", na.strings="?")
+                 
+summary(wdf)
+
+# Remove non-predictive variables
+# Cette ligne crée un nouveau dataframe foo en excluant les colonnes
+# 1, 3, 4 et 5 de wdf.
+
+foo <- wdf[,-c(1, 3, 4, 5)]
+
+# Complete cases
+# Cette ligne filtre les lignes du dataframe foo pour ne conserver
+# que les cas complets [no missing (NA)]
+
+foo <- foo[complete.cases(foo),]
+
+# Estimation backward
+# -------------------
+
+summary(lm.mod1 <- lm(murders ~., data = foo))
+
+# Critère AIC
+
+summary(lm.step.mod1 <- step(lm.mod1))
+# fonction step pour effectuer une sélection de modèle basée sur AIC.
+AIC(lm.step.mod1)
+
+# Critère BIC
+
+summary(lm.step.mod2 <- step(lm.mod1, k=log(nrow(foo))))
+# fonction step pour effectuer une sélection de modèle basée sur BIC.
+BIC(lm.step.mod2)
+
+# Test de modèles
+
+# Modèle nul
+
+summary(lm.mod0 <- lm(murders ~1., data = foo))
+
+anova(lm.step.mod1, lm.mod1)
+anova(lm.step.mod2, lm.mod1)
+
+anova(lm.step.mod2, lm.step.mod1, lm.mod1)
